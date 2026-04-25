@@ -80,6 +80,12 @@ On Windows, run the installer build as well:
 iscc packaging\\windows\\installer.iss
 ```
 
+在 macOS 上，发布产物为 `.dmg`，打开后可将 `FaceHandRecognition.app` 拖到 `Applications` 完成安装。
+On macOS, the release artifact is a `.dmg`; open it and drag `FaceHandRecognition.app` into `Applications` to install.
+
+在 Linux 上，发布产物为 `.tar.gz`，解压后可直接运行其中的程序目录。
+On Linux, the release artifact is a `.tar.gz`; extract it and run the bundled application directory directly.
+
 构建完成后，PyInstaller 产物位于 `dist/FaceHandRecognition/`，安装器与其他发布文件位于 `packaging/out/`。
 After the build completes, the PyInstaller output is placed in `dist/FaceHandRecognition/`, and the installer plus other release assets are placed in `packaging/out/`.
 
@@ -112,9 +118,9 @@ Triggers:
 Default outputs:
 
 - Windows: 便携版 `.zip` + Inno Setup 安装器 `.exe` / portable `.zip` + Inno Setup installer `.exe`
-- macOS: `.dmg`
+- macOS: 拖拽安装 `.dmg`（包含 `Applications` 快捷方式） / drag-to-install `.dmg` with an `Applications` shortcut
 - Linux: `.tar.gz` 压缩包 / `.tar.gz` archive
-- 所有平台：`SHA256SUMS.txt` 校验文件 / `SHA256SUMS.txt` checksum file
+- 所有平台：按平台区分的校验文件，如 `SHA256SUMS-windows.txt`、`SHA256SUMS-macos.txt`、`SHA256SUMS-linux.txt` / platform-specific checksum files such as `SHA256SUMS-windows.txt`, `SHA256SUMS-macos.txt`, and `SHA256SUMS-linux.txt`
 
 自动发布行为：
 Automatic release behavior:

@@ -89,7 +89,24 @@ jobs:
       - name: Package macOS artifacts
         if: runner.os == 'macOS'
         run: |
-          hdiutil create -volname ${{ env.APP_NAME }} -srcfolder dist/${{ env.APP_NAME }}.app -ov -format UDZO packaging/out/${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-macos.dmg
+          dmg_root="$RUNNER_TEMP/${{ env.APP_NAME }}-dmg"
+          rm -rf "$dmg_root"
+          mkdir -p "$dmg_root"
+          ditto "dist/${{ env.APP_NAME }}.app" "$dmg_root/${{ env.APP_NAME }}.app"
+          ln -s /Applications "$dmg_root/Applications"
+          hdiutil create -volname ${{ env.APP_NAME }} -srcfolder "$dmg_root" -ov -format UDZO packaging/out/${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-macos.dmg
+
+      - name: Verify macOS DMG layout
+        if: runner.os == 'macOS'
+        run: |
+          dmg_path="packaging/out/${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-macos.dmg"
+          mount_dir="$RUNNER_TEMP/${{ env.APP_NAME }}-mount"
+          rm -rf "$mount_dir"
+          mkdir -p "$mount_dir"
+          hdiutil attach "$dmg_path" -mountpoint "$mount_dir" -nobrowse -quiet
+          test -d "$mount_dir/${{ env.APP_NAME }}.app"
+          test -L "$mount_dir/Applications"
+          hdiutil detach "$mount_dir" -quiet
 
       - name: Package Linux artifacts
         if: runner.os == 'Linux'
@@ -102,14 +119,16 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import hashlib
+          import os
 
           output_dir = Path('packaging/out')
+          suffix = os.environ['RUNNER_OS'].lower().replace('windows', 'windows').replace('macos', 'macos').replace('linux', 'linux')
           lines = []
           for path in sorted(output_dir.iterdir()):
               if path.is_file():
                   digest = hashlib.sha256(path.read_bytes()).hexdigest()
                   lines.append(f"{digest}  {path.name}")
-          (output_dir / 'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          (output_dir / f'SHA256SUMS-{suffix}.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
 
       - name: Upload packaged artifacts
