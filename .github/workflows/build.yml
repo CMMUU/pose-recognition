@@ -1,0 +1,136 @@
+name: Build and release desktop packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_NAME: FaceHandRecognition
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compute build metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            label="${GITHUB_REF_NAME}"
+          else
+            version="0.0.0-dev.${GITHUB_RUN_NUMBER}"
+            label="manual-${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "label=${label}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Linux system packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libglib2.0-0 libegl1 libxkbcommon-x11-0 libdbus-1-3
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          choco install innosetup --no-progress -y
+
+      - name: Build application bundle
+        run: |
+          pyinstaller --noconfirm app.spec
+
+      - name: Prepare packaging output directory
+        run: |
+          python -c "from pathlib import Path; Path('packaging/out').mkdir(parents=True, exist_ok=True)"
+
+      - name: Package Windows artifacts
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Compress-Archive -Path dist\FaceHandRecognition\* -DestinationPath packaging\out\${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-windows-portable.zip -Force
+          iscc /DMyAppVersion=${{ steps.meta.outputs.version }} /DMyOutputBaseFilename=${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-windows-setup packaging\windows\installer.iss
+
+      - name: Package macOS artifacts
+        if: runner.os == 'macOS'
+        run: |
+          hdiutil create -volname ${{ env.APP_NAME }} -srcfolder dist/${{ env.APP_NAME }}.app -ov -format UDZO packaging/out/${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-macos.dmg
+
+      - name: Package Linux artifacts
+        if: runner.os == 'Linux'
+        run: |
+          tar -czf packaging/out/${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-linux.tar.gz -C dist ${{ env.APP_NAME }}
+
+      - name: Generate checksums
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+
+          output_dir = Path('packaging/out')
+          lines = []
+          for path in sorted(output_dir.iterdir()):
+              if path.is_file():
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  lines.append(f"{digest}  {path.name}")
+          (output_dir / 'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ runner.os }}-${{ steps.meta.outputs.label }}
+          path: packaging/out/*
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: ${{ env.APP_NAME }}-*
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

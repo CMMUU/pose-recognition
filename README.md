@@ -55,6 +55,66 @@ After extraction, the following files should exist:
 python app.py
 ```
 
+## 打包桌面安装版本 / Package Desktop Builds
+
+### 本地打包 / Local packaging
+
+先安装 PyInstaller：
+Install PyInstaller first:
+
+```bash
+pip install pyinstaller
+```
+
+然后执行：
+Then run:
+
+```bash
+pyinstaller --noconfirm app.spec
+```
+
+构建完成后，产物位于 `dist/FaceHandRecognition/`。
+After the build completes, the output is placed in `dist/FaceHandRecognition/`.
+
+打包时会自动带上以下运行资源：
+The package automatically includes these runtime assets:
+
+- `models/emotion-ferplus-8.onnx`
+- `models/mediapipe_hand_gesture-onnx-float/` 下全部模型与 `.data` 文件 / all hand model files and `.data` files under `models/mediapipe_hand_gesture-onnx-float/`
+- OpenCV Haar cascade 文件 / OpenCV Haar cascade file
+
+因此发布包内用户无需再单独下载模型。
+So end users do not need to download the models separately for the packaged release.
+
+### GitHub Actions 自动构建 / GitHub Actions builds
+
+仓库包含 `.github/workflows/build.yml`，可在以下平台自动构建：
+The repository includes `.github/workflows/build.yml` to build automatically on:
+
+- Windows
+- macOS
+- Linux
+
+触发方式：
+Triggers:
+
+- 手动触发 `workflow_dispatch` / manual `workflow_dispatch`
+- 推送 `v*` 标签 / pushing a `v*` tag
+
+默认产物：
+Default outputs:
+
+- Windows: 便携版 `.zip` + Inno Setup 安装器 `.exe` / portable `.zip` + Inno Setup installer `.exe`
+- macOS: `.dmg`
+- Linux: `.tar.gz` 压缩包 / `.tar.gz` archive
+- 所有平台：`SHA256SUMS.txt` 校验文件 / `SHA256SUMS.txt` checksum file
+
+自动发布行为：
+Automatic release behavior:
+
+- 手动触发时，工作流只生成并上传 Actions artifacts / manual runs only build and upload Actions artifacts
+- 推送 `v*` 标签时，工作流会自动创建或更新对应 GitHub Release，并附加各平台安装包 / pushing a `v*` tag automatically creates or updates the matching GitHub Release and attaches the packaged assets
+
 ## 功能说明 / Features
 
 ### 图片模式 / Image mode

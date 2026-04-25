@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import cv2
 import numpy as np
 from PySide6.QtCore import QSize, QTimer, Qt
@@ -22,9 +20,8 @@ from src.emotion_classifier import EmotionClassifier
 from src.face_detector import FaceDetection, FaceDetector
 from src.hand_gesture_recognizer import GESTURE_TEXT, HAND_MODEL_FILES, HandGestureRecognizer, HandPrediction
 from src.image_pipeline import ImageAnalysisResult, ImagePipeline
+from src.runtime_paths import EMOTION_MODEL_PATH, HAND_MODEL_DIR
 
-EMOTION_MODEL_PATH = Path(__file__).resolve().parents[2] / "models" / "emotion-ferplus-8.onnx"
-HAND_MODEL_DIR = Path(__file__).resolve().parents[2] / "models" / "mediapipe_hand_gesture-onnx-float"
 TOP_K = 3
 CAMERA_ANALYSIS_MAX_EDGE = 960
 PREVIEW_SHARPEN_KERNEL = np.array([

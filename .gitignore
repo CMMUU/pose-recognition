@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Build outputs
+build/
+dist/
+packaging/out/
+
+# IDE
+.idea/

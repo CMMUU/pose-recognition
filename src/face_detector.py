@@ -4,6 +4,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from src.runtime_paths import BUNDLED_HAARCASCADE_PATH
+
 MIN_FACE_SIZE = (48, 48)
 FACE_SCALE_FACTOR = 1.05
 FACE_MIN_NEIGHBORS = 6
@@ -20,7 +22,7 @@ class FaceDetection:
 
 class FaceDetector:
     def __init__(self) -> None:
-        cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
+        cascade_path = BUNDLED_HAARCASCADE_PATH if BUNDLED_HAARCASCADE_PATH.exists() else Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
         self.classifier = cv2.CascadeClassifier(str(cascade_path))
         if self.classifier.empty():
             raise RuntimeError(f"无法加载人脸检测模型: {cascade_path}")
