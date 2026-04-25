@@ -1,0 +1,5 @@
+PySide6>=6.7
+opencv-python>=4.10
+onnxruntime>=1.18
+numpy>=1.26
+Pillow>=10.0

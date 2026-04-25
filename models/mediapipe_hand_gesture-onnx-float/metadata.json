@@ -1,0 +1,112 @@
+{
+    "model_id": "mediapipe_hand_gesture",
+    "model_name": "MediaPipe-Hand-Gesture-Recognition",
+    "runtime": "onnx",
+    "precision": "float",
+    "tool_versions": {
+        "qairt": "2.42.0.251225135753_193295",
+        "onnx_runtime": "1.24.3"
+    },
+    "model_files": {
+        "palm_detector.onnx": {
+            "inputs": {
+                "image": {
+                    "shape": [
+                        1,
+                        3,
+                        256,
+                        256
+                    ],
+                    "dtype": "float32"
+                }
+            },
+            "outputs": {
+                "box_coords": {
+                    "shape": [
+                        1,
+                        2944,
+                        18
+                    ],
+                    "dtype": "float32"
+                },
+                "box_scores": {
+                    "shape": [
+                        1,
+                        2944
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        },
+        "hand_landmark_detector.onnx": {
+            "inputs": {
+                "image": {
+                    "shape": [
+                        1,
+                        3,
+                        224,
+                        224
+                    ],
+                    "dtype": "float32"
+                }
+            },
+            "outputs": {
+                "landmarks": {
+                    "shape": [
+                        1,
+                        63
+                    ],
+                    "dtype": "float32"
+                },
+                "scores": {
+                    "shape": [
+                        1,
+                        1
+                    ],
+                    "dtype": "float32"
+                },
+                "lr": {
+                    "shape": [
+                        1,
+                        1
+                    ],
+                    "dtype": "float32"
+                },
+                "world_landmarks": {
+                    "shape": [
+                        1,
+                        63
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        },
+        "canned_gesture_classifier.onnx": {
+            "inputs": {
+                "hand": {
+                    "shape": [
+                        1,
+                        64
+                    ],
+                    "dtype": "float32"
+                },
+                "mirrored_hand": {
+                    "shape": [
+                        1,
+                        64
+                    ],
+                    "dtype": "float32"
+                }
+            },
+            "outputs": {
+                "Identity": {
+                    "shape": [
+                        1,
+                        8
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        }
+    }
+}
