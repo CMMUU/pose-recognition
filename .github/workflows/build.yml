@@ -80,8 +80,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
+          if (-not (Test-Path dist\FaceHandRecognition)) {
+            throw "Missing dist\\FaceHandRecognition build output"
+          }
           Compress-Archive -Path dist\FaceHandRecognition\* -DestinationPath packaging\out\${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-windows-portable.zip -Force
-          iscc /DMyAppVersion=${{ steps.meta.outputs.version }} /DMyOutputBaseFilename=${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-windows-setup packaging\windows\installer.iss
+          iscc /DRepoRoot=${{ github.workspace }} /DMyAppVersion=${{ steps.meta.outputs.version }} /DMyOutputBaseFilename=${{ env.APP_NAME }}-${{ steps.meta.outputs.version }}-windows-setup packaging\windows\installer.iss
 
       - name: Package macOS artifacts
         if: runner.os == 'macOS'

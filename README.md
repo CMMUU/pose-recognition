@@ -73,8 +73,15 @@ Then run:
 pyinstaller --noconfirm app.spec
 ```
 
-构建完成后，产物位于 `dist/FaceHandRecognition/`。
-After the build completes, the output is placed in `dist/FaceHandRecognition/`.
+在 Windows 上，如需生成安装器，再执行：
+On Windows, run the installer build as well:
+
+```bash
+iscc packaging\\windows\\installer.iss
+```
+
+构建完成后，PyInstaller 产物位于 `dist/FaceHandRecognition/`，安装器与其他发布文件位于 `packaging/out/`。
+After the build completes, the PyInstaller output is placed in `dist/FaceHandRecognition/`, and the installer plus other release assets are placed in `packaging/out/`.
 
 打包时会自动带上以下运行资源：
 The package automatically includes these runtime assets:
